@@ -1,0 +1,31 @@
+import software.amazon.awssdk.regions.Region;
+import software.amazon.awssdk.services.s3.S3Client;
+import software.amazon.awssdk.services.s3.model.PutObjectRequest;
+import software.amazon.awssdk.services.s3.model.PutObjectResponse;
+
+import java.nio.file.Paths;
+
+public class S3Uploader {
+
+    private Region region;
+    private S3Client s3Client;
+    private String bucket;
+    private String key;
+
+    public S3Uploader(String bucket, String key) {
+        this.bucket = hackhubbucket;
+        this.key = key; //actual key removed (safety percautions)
+        this.region = Region.EU_NORTH_1;
+        this.s3Client = S3Client.builder().region(region).build();
+    }
+
+    public String uploadFile(String filePath) {
+        PutObjectRequest putOb = PutObjectRequest.builder()
+                .bucket(bucket)
+                .key(key)
+                .build();
+
+        PutObjectResponse response = s3Client.putObject(putOb, Paths.get(filePath));
+        return response.eTag() + " was uploaded to " + bucket;
+    }
+}
