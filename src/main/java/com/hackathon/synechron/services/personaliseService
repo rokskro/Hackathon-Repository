@@ -51,38 +51,37 @@ public class RecommendationService {
     }
 
 
-    public travelRecomendations[] getRecommendations(String campaignArn, String userId, String weather) {
-    GetRecommendationsRequest recommendationsRequest = new GetRecommendationsRequest()
-        .withCampaignArn(campaignArn)
-        .withUserId(userId);
-    List<PredictedItem> recommendations = personalizeClient.getRecommendations(recommendationsRequest).itemList();
-
-    // places importance / changes the prioritising of recomendations based on api weather refs  
-
-    // priority mapping based on weather value 
-    Map<String, List<String>> priorities = new HashMap<>();
-    priorities.put("sunny", Arrays.asList("walk", "cycle"));
-    priorities.put("rainy", Arrays.asList("public_bus"));
-
-    // priority sorting based on priority mapping 
-    Comparator<Item> comparator = (item1, item2) -> {
-        List<String> weatherPriority = priorities.get(weather.toLowerCase());
-        boolean item1IsPriority = weatherPriority.contains(item1.itemId());
-        boolean item2IsPriority = weatherPriority.contains(item2.itemId());
-
-        if (item1IsPriority && !item2IsPriority) {
-            return -1;
-        } else if (!item1IsPriority && item2IsPriority) {
-            return 1;
-        } else {
-            return 0;
-        }
-    };
-
-    // neutral sorting 
-    recommendations.sort(comparator);
-        return recommendations.toArray(PredictedItem[]::new);
+    public TravelRecommendation[] getTravelRecommendations(String campaignArn, String userId, String weather) {
+        // Request recommendations
+        GetRecommendationsRequest recommendationsRequest = new GetRecommendationsRequest()
+            .withCampaignArn(campaignArn)
+            .withUserId(userId);
+        List<TravelRecommendation> recommendationList = personalizeClient.getRecommendations(recommendationsRequest).itemList();
+    
+        // Define priorities based on weather conditions
+        Map<String, List<String>> weatherToPriorityMap = new HashMap<>();
+        weatherToPriorityMap.put("sunny", Arrays.asList("walk", "cycle"));
+        weatherToPriorityMap.put("rainy", Arrays.asList("public_bus"));
+    
+        // Create comparator to prioritize items based on weather
+        Comparator<TravelRecommendation> itemComparator = (item1, item2) -> {
+            List<String> priorityItems = weatherToPriorityMap.get(weather.toLowerCase());
+            boolean item1IsPriority = priorityItems.contains(item1.itemId());
+            boolean item2IsPriority = priorityItems.contains(item2.itemId());
+    
+            if (item1IsPriority && !item2IsPriority) {
+                return -1;
+            } else if (!item1IsPriority && item2IsPriority) {
+                return 1;
+            } else {
+                return 0;
+            }
+        };
+    
+        // Sort the recommendation list
+        recommendationList.sort(itemComparator);
+    
+        // Convert list to array and return
+        return recommendationList.toArray(TravelRecommendation[]::new);
     }
-
-
 }
